@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.photowey.hierarchical.timewheel.group;
+package com.photowey.hierarchical.timewheel.scheduler;
 
-import com.photowey.hierarchical.timewheel.core.constant.TimeWheelConstants;
+import com.photowey.hierarchical.timewheel.core.event.ScheduledTaskEvent;
+import com.photowey.hierarchical.timewheel.core.task.ScheduledTask;
+import com.photowey.hierarchical.timewheel.engine.TimeWheelEngine;
+import com.photowey.hierarchical.timewheel.publisher.EventPublisher;
 
 /**
- * {@code SchedulerGroup}
+ * {@code DefaultWorker}
  *
  * @author photowey
- * @date 2023/04/04
+ * @date 2023/04/05
  * @since 1.0.0
  */
-public interface SchedulerGroup extends EventGroup {
+public class DefaultWorker implements Worker {
 
     @Override
-    default String topic() {
-        return TimeWheelConstants.TICK_TOPIC;
-    }
+    public void run(ScheduledTask task) {
+        ScheduledTaskEvent taskEvent = new ScheduledTaskEvent(task);
 
-    @Override
-    default String group() {
-        return TimeWheelConstants.SCHEDULE_TICK_GROUP;
+        EventPublisher eventPublisher = TimeWheelEngine.getInstance().eventPublisher();
+        eventPublisher.publishEvent(taskEvent);
     }
 }

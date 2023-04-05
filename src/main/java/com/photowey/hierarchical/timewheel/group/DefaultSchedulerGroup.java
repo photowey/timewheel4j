@@ -15,17 +15,19 @@
  */
 package com.photowey.hierarchical.timewheel.group;
 
+import com.photowey.hierarchical.timewheel.core.event.Event;
+
 /**
- * {@code Group}
+ * {@code DefaultSchedulerGroup}
  *
  * @author photowey
- * @date 2023/04/04
+ * @date 2023/04/05
  * @since 1.0.0
  */
-public interface Group {
-    String group();
+public class DefaultSchedulerGroup implements SchedulerGroup {
 
-    default void shutdown() {
-
+    @Override
+    public void handleEvent(Event event) {
+        // advance time-wheel
     }
 }

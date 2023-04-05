@@ -24,4 +24,25 @@ package com.photowey.hierarchical.timewheel.scheduler;
  */
 public interface Scheduler {
 
+    /**
+     * Init Scheduler
+     */
+    default void init() {
+    }
+
+    /**
+     * Start Scheduler
+     */
+    default void start() {
+
+    }
+
+    void schedule();
+
+    /**
+     * Shutdown Scheduler
+     */
+    default void shutdown() {
+
+    }
 }

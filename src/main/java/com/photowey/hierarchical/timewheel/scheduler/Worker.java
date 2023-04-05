@@ -15,6 +15,8 @@
  */
 package com.photowey.hierarchical.timewheel.scheduler;
 
+import com.photowey.hierarchical.timewheel.core.task.ScheduledTask;
+
 /**
  * {@code Worker}
  *
@@ -23,5 +25,7 @@ package com.photowey.hierarchical.timewheel.scheduler;
  * @since 1.0.0
  */
 public interface Worker {
+
+    void run(ScheduledTask task);
 
 }

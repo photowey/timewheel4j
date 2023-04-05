@@ -15,6 +15,8 @@
  */
 package com.photowey.hierarchical.timewheel.group;
 
+import com.photowey.hierarchical.timewheel.core.event.Event;
+
 /**
  * {@code EventGroup}
  *
@@ -24,4 +26,7 @@ package com.photowey.hierarchical.timewheel.group;
  */
 public interface EventGroup extends Group {
 
+    String topic();
+
+    void handleEvent(Event event);
 }

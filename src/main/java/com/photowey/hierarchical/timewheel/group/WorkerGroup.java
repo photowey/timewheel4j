@@ -15,6 +15,8 @@
  */
 package com.photowey.hierarchical.timewheel.group;
 
+import com.photowey.hierarchical.timewheel.core.constant.TimeWheelConstants;
+
 /**
  * {@code WorkerGroup}
  *
@@ -23,5 +25,15 @@ package com.photowey.hierarchical.timewheel.group;
  * @since 1.0.0
  */
 public interface WorkerGroup extends EventGroup {
+
+    @Override
+    default String topic() {
+        return TimeWheelConstants.TASK_TOPIC;
+    }
+
+    @Override
+    default String group() {
+        return TimeWheelConstants.RUN_TASK_GROUP;
+    }
 
 }
