@@ -16,10 +16,15 @@
 package com.photowey.hierarchical.timewheel.bootstrap;
 
 import com.photowey.hierarchical.timewheel.queue.delay.DelayQueue;
+import com.photowey.hierarchical.timewheel.scheduler.DefaultScheduler;
+import com.photowey.hierarchical.timewheel.scheduler.DefaultWorker;
 import com.photowey.hierarchical.timewheel.scheduler.Scheduler;
 import com.photowey.hierarchical.timewheel.scheduler.Worker;
 
 import java.io.Serializable;
+import java.util.concurrent.ExecutorService;
+
+import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkTure;
 
 /**
  * {@code QueueBoostrap}
@@ -35,8 +40,95 @@ public class QueueBoostrap implements Serializable {
     private Scheduler boss;
     private Worker worker;
 
+    private QueueBoostrap() {
+
+    }
+
+    public static class QueueBoostrapBuilder implements Serializable {
+
+        private long delayMills;
+        private long maxDelay;
+        private int level;
+        private long corePoolSize;
+        private long maximumPoolSize;
+        private long keepAliveTime;
+        private String workerPoolName;
+        private int[] intervals;
+
+        private ExecutorService executorService;
+
+        public QueueBoostrapBuilder delayMills(long delayMills) {
+            this.delayMills = delayMills;
+            return this;
+        }
+
+        public QueueBoostrapBuilder maxDelay(long maxDelay) {
+            this.maxDelay = maxDelay;
+            return this;
+        }
+
+        public QueueBoostrapBuilder level(int level) {
+            this.level = level;
+            return this;
+        }
+
+        public QueueBoostrapBuilder intervals(int[] intervals) {
+            this.intervals = intervals;
+            return this;
+        }
+
+        public QueueBoostrapBuilder corePoolSize(int corePoolSize) {
+            this.corePoolSize = corePoolSize;
+            return this;
+        }
+
+        public QueueBoostrapBuilder maximumPoolSize(int maximumPoolSize) {
+            this.maximumPoolSize = maximumPoolSize;
+            return this;
+        }
+
+        public QueueBoostrapBuilder keepAliveTime(long keepAliveTime) {
+            this.keepAliveTime = keepAliveTime;
+            return this;
+        }
+
+        public QueueBoostrapBuilder workerPoolName(String workerPoolName) {
+            this.workerPoolName = workerPoolName;
+            return this;
+        }
+
+        public QueueBoostrapBuilder executorService(ExecutorService executorService) {
+            this.executorService = executorService;
+            return this;
+        }
+
+        public QueueBoostrap build() {
+            checkTure(level == this.intervals.length, "The level and intervals not matched");
+
+            QueueBoostrap boostrap = new QueueBoostrap();
+            Scheduler boss = new DefaultScheduler(this.delayMills, this.intervals[0]);
+            Worker worker = new DefaultWorker();
+
+            boostrap.setBoss(boss);
+            boostrap.setWorker(worker);
+
+            // TODO
+
+            return boostrap;
+        }
+    }
+
+
     public DelayQueue start() {
         // TODO
         return null;
+    }
+
+    private void setBoss(Scheduler boss) {
+        this.boss = boss;
+    }
+
+    private void setWorker(Worker worker) {
+        this.worker = worker;
     }
 }

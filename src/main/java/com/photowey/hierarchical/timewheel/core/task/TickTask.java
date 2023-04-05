@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.photowey.hierarchical.timewheel.event;
+package com.photowey.hierarchical.timewheel.core.task;
 
 /**
- * {@code Event}
+ * {@code TickTask}
  *
  * @author photowey
- * @date 2023/04/04
+ * @date 2023/04/05
  * @since 1.0.0
  */
-public interface Event extends Runnable {
+public class TickTask implements Runnable {
 
-    String topic();
+    @Override
+    public void run() {
+        // do nothing
+    }
+
+    public static TickTask create() {
+        return new TickTask();
+    }
 }

@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.photowey.hierarchical.timewheel.queue.delay;
+package com.photowey.hierarchical.timewheel.registry;
 
-import com.photowey.hierarchical.timewheel.group.SchedulerGroup;
-import com.photowey.hierarchical.timewheel.group.WorkerGroup;
+import com.photowey.hierarchical.timewheel.group.EventGroup;
 
-import java.io.Serializable;
+import java.util.List;
 
 /**
- * {@code DelayQueue}
+ * {@code EventRegistry}
  *
  * @author photowey
- * @date 2023/04/04
+ * @date 2023/04/05
  * @since 1.0.0
  */
-public interface DelayQueue extends Serializable {
+public interface EventRegistry {
 
-    SchedulerGroup scheduler();
+    void register(String topic, EventGroup group);
 
-    WorkerGroup worker();
+    List<EventGroup> acquireEventGroup(String topic);
 
+    default void clean() {
+    }
 }

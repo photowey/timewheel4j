@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.photowey.hierarchical.timewheel.queue.delay;
-
-import com.photowey.hierarchical.timewheel.group.SchedulerGroup;
-import com.photowey.hierarchical.timewheel.group.WorkerGroup;
-
-import java.io.Serializable;
+package com.photowey.hierarchical.timewheel.publisher;
 
 /**
- * {@code DelayQueue}
+ * {@code Publisher}
  *
  * @author photowey
- * @date 2023/04/04
+ * @date 2023/04/05
  * @since 1.0.0
  */
-public interface DelayQueue extends Serializable {
+public interface Publisher {
 
-    SchedulerGroup scheduler();
+    default void init() {
 
-    WorkerGroup worker();
+    }
+
+    default void start() {
+
+    }
+
+    default void shutdown() {
+
+    }
 
 }
