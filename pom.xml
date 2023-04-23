@@ -189,9 +189,11 @@ limitations under the License.
 ]]>
                     </inlineHeader>
                     <properties>
-                        <inceptionYear>2022</inceptionYear>
-                        <owner>Uphicoo</owner>
-                        <website>https://uphicoo.com</website>
+                        <inceptionYear>2023</inceptionYear>
+                        <author>photowey</author>
+                        <email>photowey@gmail.com</email>
+                        <owner>photowey</owner>
+                        <website>https://github.ccom/photowey</website>
                     </properties>
                     <excludes>
                         <exclude>.gitignore</exclude>
