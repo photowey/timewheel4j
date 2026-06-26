@@ -11,6 +11,17 @@ Tasks are stored inside hierarchical wheel buckets. The global delay queue only
 contains non-empty buckets, so expiration work is driven by active buckets rather
 than total scheduled task count.
 
+The core scheduler design is inspired by Apache Kafka's hierarchical timing
+wheel implementation: bucket-level delay queue, intrusive bucket lists, overflow
+wheel cascading, and re-adding entries when higher-level buckets expire. The
+code in this repository is an independent Java library implementation with its
+own API, tests, Spring integration, metrics, and benchmark modules.
+
+`timewheel4j` also uses a boss/worker execution model. The boss loop owns the
+timing wheel, polls expired buckets, advances the clock, and submits due tasks.
+Worker threads execute user `Runnable` instances, so slow or blocking user code
+does not block wheel advancement and bucket cascading.
+
 ## Status
 
 This repository has been reset around the new scheduler core. The previous

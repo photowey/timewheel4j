@@ -16,6 +16,14 @@ This keeps the global delay queue small when many tasks share nearby deadlines.
 Tasks live inside wheel buckets. The delay queue only wakes the scheduler when a
 non-empty bucket reaches its expiration time.
 
+The implementation intentionally follows the same scheduling model used by
+Apache Kafka's timer: a `DelayQueue` of bucket lists, intrusive task membership
+inside each bucket, overflow wheels for deadlines outside the current interval,
+and bucket flush/re-add when a coarse bucket expires. `timewheel4j` keeps that
+core idea but exposes it as an independent Java 11 library with a smaller public
+API, boss/worker executor separation, metrics snapshots, Spring Boot starters,
+and JMH benchmark suites.
+
 ## Architecture Overview
 
 The Maven reactor is split by responsibility:
@@ -278,6 +286,13 @@ sequenceDiagram
 ## Execution Model
 
 `SystemTimer` uses a boss/worker split:
+
+The boss side is optimized for timer correctness and low scheduling latency. It
+is the single owner that polls bucket expirations, advances the hierarchical
+wheel, flushes buckets, and decides whether an entry should be cascaded or
+submitted. It never runs user `Runnable` code directly. The worker side is
+optimized for event handling: worker threads execute expired user tasks and can
+be sized, bounded, or supplied by the caller independently from the boss loop.
 
 ```mermaid
 flowchart LR
