@@ -33,3 +33,6 @@ build/
 
 ### Gitnexus files
 .gitnexus
+
+### Temp files
+.tmp
