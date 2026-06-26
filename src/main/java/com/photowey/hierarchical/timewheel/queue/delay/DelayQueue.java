@@ -19,13 +19,14 @@ import com.photowey.hierarchical.timewheel.group.SchedulerGroup;
 import com.photowey.hierarchical.timewheel.group.WorkerGroup;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@code DelayQueue}
  *
  * @author photowey
- * @date 2023/04/04
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/04
  */
 public interface DelayQueue extends Serializable {
 
@@ -33,4 +34,7 @@ public interface DelayQueue extends Serializable {
 
     WorkerGroup worker();
 
+    void schedule(Runnable task, long delay, TimeUnit unit);
+
+    void shutdown();
 }

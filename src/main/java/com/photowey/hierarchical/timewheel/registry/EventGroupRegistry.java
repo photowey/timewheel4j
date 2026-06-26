@@ -17,10 +17,11 @@ package com.photowey.hierarchical.timewheel.registry;
 
 import com.photowey.hierarchical.timewheel.group.EventGroup;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotBlank;
 import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull;
@@ -29,8 +30,8 @@ import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull
  * {@code EventGroupRegistry}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class EventGroupRegistry implements EventRegistry {
 
@@ -41,21 +42,15 @@ public class EventGroupRegistry implements EventRegistry {
         checkNotBlank(topic, "topic");
         checkNotNull(group, "group");
 
-        if (this.ctx.contains(topic)) {
-            this.ctx.get(topic).add(group);
-
-            return;
-        }
-
-        List<EventGroup> eventGroups = new ArrayList<>();
-        eventGroups.add(group);
-        this.ctx.put(topic, eventGroups);
+        this.ctx.computeIfAbsent(topic, key -> new CopyOnWriteArrayList<>()).add(group);
     }
 
     @Override
     public List<EventGroup> acquireEventGroup(String topic) {
         List<EventGroup> eventGroups = this.ctx.get(topic);
-        return Optional.ofNullable(eventGroups).orElse(new ArrayList<>(0));
+        return Collections.unmodifiableList(Optional.ofNullable(eventGroups)
+                .map(CopyOnWriteArrayList::new)
+                .orElse(new CopyOnWriteArrayList<>()));
     }
 
     @Override

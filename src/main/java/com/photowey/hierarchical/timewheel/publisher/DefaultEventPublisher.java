@@ -30,12 +30,22 @@ import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull
  * {@code DefaultEventPublisher}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class DefaultEventPublisher implements EventPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEventPublisher.class);
+
+    private final EventRegistry registry;
+
+    public DefaultEventPublisher() {
+        this(TimeWheelEngine.getInstance().eventRegistry());
+    }
+
+    public DefaultEventPublisher(EventRegistry registry) {
+        this.registry = checkNotNull(registry, "registry");
+    }
 
     @Override
     public void publishEvent(Event event) {
@@ -43,8 +53,7 @@ public class DefaultEventPublisher implements EventPublisher {
 
         this.preLog(event);
 
-        EventRegistry registry = TimeWheelEngine.getInstance().eventRegistry();
-        List<EventGroup> eventGroups = registry.acquireEventGroup(event.topic());
+        List<EventGroup> eventGroups = this.registry.acquireEventGroup(event.topic());
         for (EventGroup eventGroup : eventGroups) {
             eventGroup.handleEvent(event);
         }

@@ -16,15 +16,18 @@
 package com.photowey.hierarchical.timewheel.group;
 
 import com.photowey.hierarchical.timewheel.core.constant.TimeWheelConstants;
+import com.photowey.hierarchical.timewheel.core.task.ScheduledTask;
 
 /**
  * {@code SchedulerGroup}
  *
  * @author photowey
- * @date 2023/04/04
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/04
  */
 public interface SchedulerGroup extends EventGroup {
+
+    void schedule(ScheduledTask task);
 
     @Override
     default String topic() {

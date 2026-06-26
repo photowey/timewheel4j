@@ -24,8 +24,8 @@ import com.photowey.hierarchical.timewheel.registry.EventRegistry;
  * {@code TimeWheelEngine}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class TimeWheelEngine implements Engine {
 

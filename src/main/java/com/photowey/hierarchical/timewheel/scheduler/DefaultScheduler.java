@@ -25,14 +25,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull;
 import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkPositive;
 
 /**
  * {@code DefaultScheduler}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class DefaultScheduler implements Scheduler {
 
@@ -40,15 +41,21 @@ public class DefaultScheduler implements Scheduler {
     private final long period;
     private final TimeUnit unit;
     private final ScheduledExecutorService executorService;
+    private final EventPublisher eventPublisher;
 
     public DefaultScheduler(long delayMills, long periodMills) {
+        this(delayMills, periodMills, TimeWheelEngine.getInstance().eventPublisher());
+    }
+
+    public DefaultScheduler(long delayMills, long periodMills, EventPublisher eventPublisher) {
         checkPositive(delayMills, "delayMills");
-        checkPositive(delayMills, "periodMills");
+        checkPositive(periodMills, "periodMills");
 
         this.initialDelay = delayMills;
         this.period = periodMills;
         this.unit = TimeUnit.MILLISECONDS;
         this.executorService = Executors.newSingleThreadScheduledExecutor();
+        this.eventPublisher = checkNotNull(eventPublisher, "eventPublisher");
     }
 
     @Override
@@ -60,8 +67,7 @@ public class DefaultScheduler implements Scheduler {
     public void schedule() {
         TickEvent tickEvent = new AdvanceTickEvent(TickTask.create());
 
-        EventPublisher eventPublisher = TimeWheelEngine.getInstance().eventPublisher();
-        eventPublisher.publishEvent(tickEvent);
+        this.eventPublisher.publishEvent(tickEvent);
     }
 
     @Override

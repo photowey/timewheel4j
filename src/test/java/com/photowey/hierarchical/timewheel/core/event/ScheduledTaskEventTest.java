@@ -16,18 +16,30 @@
 package com.photowey.hierarchical.timewheel.core.event;
 
 import com.photowey.hierarchical.timewheel.core.constant.TimeWheelConstants;
+import org.junit.jupiter.api.Test;
 
-/**
- * {@code TaskEvent}
- *
- * @author photowey
- * @version 1.0.0
- * @since 2023/04/04
- */
-public interface TaskEvent extends Event {
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    @Override
-    default String topic() {
-        return TimeWheelConstants.TASK_TOPIC;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ScheduledTaskEventTest {
+
+    @Test
+    void shouldPublishScheduledTaskOnTaskTopic() {
+        ScheduledTaskEvent event = new ScheduledTaskEvent(() -> {
+        });
+
+        assertEquals(TimeWheelConstants.TASK_TOPIC, event.topic());
+    }
+
+    @Test
+    void shouldRunWrappedTask() {
+        AtomicBoolean executed = new AtomicBoolean(false);
+        ScheduledTaskEvent event = new ScheduledTaskEvent(() -> executed.set(true));
+
+        event.run();
+
+        assertTrue(executed.get());
     }
 }

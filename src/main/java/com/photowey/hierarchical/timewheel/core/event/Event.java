@@ -19,8 +19,8 @@ package com.photowey.hierarchical.timewheel.core.event;
  * {@code Event}
  *
  * @author photowey
- * @date 2023/04/04
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/04
  */
 public interface Event extends Runnable {
 

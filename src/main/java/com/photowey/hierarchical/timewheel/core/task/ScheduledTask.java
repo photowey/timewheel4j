@@ -18,21 +18,30 @@ package com.photowey.hierarchical.timewheel.core.task;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull;
+
 /**
  * {@code ScheduledTask}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class ScheduledTask implements Runnable, Delayed {
 
     private final Runnable task;
     private final long expireTime;
+    private final long delayMillis;
 
     public ScheduledTask(Runnable task, long delay, TimeUnit unit) {
+        checkNotNull(task, "task");
+        checkNotNull(unit, "unit");
+        if (delay < 0) {
+            throw new IllegalArgumentException("delay : " + delay + " (expected: >= 0)");
+        }
         this.task = task;
-        this.expireTime = System.currentTimeMillis() + unit.toMillis(delay);
+        this.delayMillis = unit.toMillis(delay);
+        this.expireTime = System.currentTimeMillis() + this.delayMillis;
     }
 
     @Override
@@ -48,5 +57,16 @@ public class ScheduledTask implements Runnable, Delayed {
     @Override
     public void run() {
         this.task.run();
+    }
+
+    public long delayTicks(long tickMillis) {
+        if (tickMillis <= 0) {
+            throw new IllegalArgumentException("tickMillis : " + tickMillis + " (expected: > 0)");
+        }
+        return ticks(this.delayMillis, tickMillis);
+    }
+
+    private static long ticks(long delayMillis, long tickMillis) {
+        return Math.max(1L, (delayMillis + tickMillis - 1L) / tickMillis);
     }
 }

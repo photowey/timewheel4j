@@ -20,20 +20,31 @@ import com.photowey.hierarchical.timewheel.core.task.ScheduledTask;
 import com.photowey.hierarchical.timewheel.engine.TimeWheelEngine;
 import com.photowey.hierarchical.timewheel.publisher.EventPublisher;
 
+import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull;
+
 /**
  * {@code DefaultWorker}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class DefaultWorker implements Worker {
+
+    private final EventPublisher eventPublisher;
+
+    public DefaultWorker() {
+        this(TimeWheelEngine.getInstance().eventPublisher());
+    }
+
+    public DefaultWorker(EventPublisher eventPublisher) {
+        this.eventPublisher = checkNotNull(eventPublisher, "eventPublisher");
+    }
 
     @Override
     public void run(ScheduledTask task) {
         ScheduledTaskEvent taskEvent = new ScheduledTaskEvent(task);
 
-        EventPublisher eventPublisher = TimeWheelEngine.getInstance().eventPublisher();
-        eventPublisher.publishEvent(taskEvent);
+        this.eventPublisher.publishEvent(taskEvent);
     }
 }

@@ -15,19 +15,21 @@
  */
 package com.photowey.hierarchical.timewheel.core.event;
 
+import static com.photowey.hierarchical.timewheel.core.fx.Functions.checkNotNull;
+
 /**
  * {@code ScheduledTaskEvent}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
-public class ScheduledTaskEvent implements TickEvent {
+public class ScheduledTaskEvent implements TaskEvent {
 
     private Runnable task;
 
     public ScheduledTaskEvent(Runnable task) {
-        this.task = task;
+        this.task = checkNotNull(task, "task");
     }
 
     @Override

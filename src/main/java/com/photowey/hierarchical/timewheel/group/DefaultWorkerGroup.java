@@ -26,8 +26,8 @@ import java.util.concurrent.*;
  * {@code DefaultWorkerGroup}
  *
  * @author photowey
- * @date 2023/04/05
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2023/04/05
  */
 public class DefaultWorkerGroup implements WorkerGroup {
 
@@ -119,5 +119,10 @@ public class DefaultWorkerGroup implements WorkerGroup {
             ScheduledTaskEvent taskEvent = (ScheduledTaskEvent) event;
             this.executorService.execute(taskEvent);
         }
+    }
+
+    @Override
+    public void shutdown() {
+        this.executorService.shutdown();
     }
 }
