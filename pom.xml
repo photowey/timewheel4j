@@ -50,7 +50,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <reversion>1.0.0-SNAPSHOT</reversion>
+        <reversion>1.0.0</reversion>
 
         <spring-boot.version>2.7.5</spring-boot.version>
         <spring-boot-v3.version>3.2.4</spring-boot-v3.version>
