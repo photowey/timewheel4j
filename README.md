@@ -54,12 +54,16 @@ Current implementation:
 Use the BOM when consuming more than one artifact:
 
 ```xml
+<properties>
+    <timewheel4j.version>REPLACE_WITH_LATEST_RELEASE</timewheel4j.version>
+</properties>
+
 <dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>io.github.photowey</groupId>
             <artifactId>timewheel4j-bom</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${timewheel4j.version}</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -134,11 +138,12 @@ flowchart LR
     Boss["Boss Executor<br/>(single owner loop)"]
     Clock["Clock"]
     Metrics["TimerMetrics"]
-    DelayQueue["BucketDelayQueue<br/>(DelayQueue<TimerTaskList>)"]
+    DelayQueue["BucketDelayQueue<br/>(DelayQueue&lt;TimerTaskList&gt;)"]
     L0["TimingWheel L0"]
     L1["TimingWheel L1"]
     L2["TimingWheel L2..."]
     Worker["Worker Executor"]
+    Task["User Runnable"]
 
     Client --> Timer
     Timer --> SystemTimer
@@ -154,7 +159,22 @@ flowchart LR
     L2 --> DelayQueue
     DelayQueue -->|"expired bucket"| SystemTimer
     SystemTimer -->|"due task"| Worker
+    Worker --> Task
 ```
+
+## Boss-Worker Execution Model
+
+`timewheel4j` separates scheduling from task execution.
+
+- The boss executor owns the timing wheel and runs one scheduler loop per
+  `SystemTimer`.
+- The boss loop polls expired buckets, advances the wheel clock, flushes bucket
+  entries, cascades entries back into lower-level wheels, and submits due tasks.
+- The boss loop never runs user `Runnable` code directly.
+- Worker executors run expired user tasks, so slow or blocking task logic does
+  not block bucket expiration, wheel advancement, or cascade processing.
+- Applications may use the built-in executors or provide caller-owned boss and
+  worker `ExecutorService` instances.
 
 Read the full developer guide here:
 
@@ -383,7 +403,7 @@ The core project targets Java 11 and uses the Maven compiler `release` option to
 produce Java 11 bytecode. The Boot 3 starter targets Java 17 because Spring Boot
 3.x and Spring Framework 6 require it.
 
-## Roadmap
+## Future Work
 
 - benchmark result publishing and historical comparison reports
 - optional adapters for Micrometer or other metrics backends

@@ -65,7 +65,7 @@ flowchart LR
     Boss["Boss Executor<br/>single owner loop"]
     Clock["Clock"]
     Metrics["TimerMetrics"]
-    DelayQueue["BucketDelayQueue<br/>(DelayQueue<TimerTaskList>)"]
+    DelayQueue["BucketDelayQueue<br/>(DelayQueue&lt;TimerTaskList&gt;)"]
     Wheel0["TimingWheel L0<br/>tickMs"]
     Wheel1["TimingWheel L1<br/>tickMs * wheelSize"]
     Wheel2["TimingWheel L2..."]
@@ -137,6 +137,7 @@ classDiagram
         +wheelSize(int wheelSize) TimerBuilder
         +bossExecutor(ExecutorService bossExecutor) TimerBuilder
         +bossName(String bossName) TimerBuilder
+        +schedulerName(String schedulerName) TimerBuilder
         +workerThreads(int workerThreads) TimerBuilder
         +workerQueueCapacity(int workerQueueCapacity) TimerBuilder
         +workerExecutor(ExecutorService workerExecutor) TimerBuilder
@@ -161,7 +162,7 @@ classDiagram
     }
 
     class SystemTimer {
-        -DelayQueue~TimerTaskList~ delayQueue
+        -BucketDelayQueue delayQueue
         -TimingWheel timingWheel
         -ExecutorService boss
         -ExecutorService workers
@@ -273,8 +274,8 @@ sequenceDiagram
             Note over TW: entry cascades into lower wheel<br/>or remains in overflow wheel
         else due now
             TW-->>Boss: false
-            Boss->>EX: execute(entry.task)
-            Boss->>Boss: record timeout expiration
+            Boss->>Boss: mark entry expired and record timeout expiration
+            Boss->>EX: submit entry.run
             alt worker rejects
                 EX-->>Boss: RejectedExecutionException
                 Boss->>Boss: record rejection and continue loop
@@ -547,7 +548,7 @@ The `toolchain` profile expects JDK 11 and JDK 17 entries in
 `~/.m2/toolchains.xml`. Local builds can run without that profile when the
 developer does not have toolchains configured.
 
-## Extension Roadmap
+## Future Work
 
 The current code is intentionally compact. The next engineering work should be:
 
