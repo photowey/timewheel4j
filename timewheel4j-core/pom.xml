@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.photowey</groupId>
         <artifactId>timewheel4j</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${reversion}</version>
     </parent>
 
     <artifactId>timewheel4j-core</artifactId>

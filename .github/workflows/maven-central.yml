@@ -71,7 +71,7 @@ jobs:
           EOF
 
       - name: Set release version
-        run: mvn -B versions:set -DnewVersion="${{ inputs.version }}" -DgenerateBackupPoms=false
+        run: mvn -B versions:set-property -Dproperty=reversion -DnewVersion="${{ inputs.version }}" -DgenerateBackupPoms=false
 
       - name: Publish to Maven Central
         env:
