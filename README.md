@@ -3,13 +3,13 @@
 `timewheel4j` is a Kafka-style hierarchical timing wheel for massive delayed
 scheduling in Java.
 
-The project focuses on one idea:
+Primary scheduling rule:
 
-> Use a `DelayQueue` for bucket expiration, not for every delayed task.
+> Store bucket expirations in the `DelayQueue`; store delayed tasks inside
+> timing-wheel buckets.
 
 Tasks are stored inside hierarchical wheel buckets. The global delay queue only
-contains non-empty buckets, so expiration work is driven by active buckets rather
-than total scheduled task count.
+contains non-empty buckets, so expiration work scales with active buckets.
 
 The core scheduler design is inspired by Apache Kafka's hierarchical timing
 wheel implementation: bucket-level delay queue, intrusive bucket lists, overflow
@@ -17,18 +17,14 @@ wheel cascading, and re-adding entries when higher-level buckets expire. The
 code in this repository is an independent Java library implementation with its
 own API, tests, Spring integration, metrics, and benchmark modules.
 
-`timewheel4j` also uses a boss/worker execution model. The boss loop owns the
-timing wheel, polls expired buckets, advances the clock, and submits due tasks.
-Worker threads execute user `Runnable` instances, so slow or blocking user code
-does not block wheel advancement and bucket cascading.
+`timewheel4j` also uses a boss/worker execution model. The boss loop owns bucket
+expiration processing, advances the wheel clock, flushes expired buckets, and
+submits due tasks. Worker threads execute scheduled `Runnable` instances.
+Blocking task logic is isolated from wheel advancement and bucket cascading.
 
-## Status
+## Implementation Scope
 
-This repository has been reset around the new scheduler core. The previous
-delay-queue facade, event registry, scheduler group, and worker group layers
-have been removed.
-
-Current implementation:
+Implemented components:
 
 - Maven reactor with `timewheel4j-core`, `timewheel4j-bom`, and Spring Boot
   starter modules
@@ -36,7 +32,7 @@ Current implementation:
 - public `Timeout` cancellation handle
 - `TimerBuilder` for configuration
 - Kafka-style `SystemTimer`
-- boss executor for the single timing-wheel owner loop
+- boss executor for the single bucket expiration loop
 - bounded worker executor for expired task execution
 - hierarchical `TimingWheel` with overflow wheels
 - bucket-level `BucketDelayQueue` backed by `DelayQueue<TimerTaskList>`
@@ -135,7 +131,7 @@ flowchart LR
     Client["Client"]
     Timer["Timer API"]
     SystemTimer["SystemTimer"]
-    Boss["Boss Executor<br/>(single owner loop)"]
+    Boss["Boss Executor<br/>(bucket expiration loop)"]
     Clock["Clock"]
     Metrics["TimerMetrics"]
     DelayQueue["BucketDelayQueue<br/>(DelayQueue&lt;TimerTaskList&gt;)"]
@@ -143,7 +139,7 @@ flowchart LR
     L1["TimingWheel L1"]
     L2["TimingWheel L2..."]
     Worker["Worker Executor"]
-    Task["User Runnable"]
+    Task["Scheduled Runnable"]
 
     Client --> Timer
     Timer --> SystemTimer
@@ -166,17 +162,16 @@ flowchart LR
 
 `timewheel4j` separates scheduling from task execution.
 
-- The boss executor owns the timing wheel and runs one scheduler loop per
-  `SystemTimer`.
+- The boss executor runs one bucket expiration loop per `SystemTimer`.
 - The boss loop polls expired buckets, advances the wheel clock, flushes bucket
   entries, cascades entries back into lower-level wheels, and submits due tasks.
-- The boss loop never runs user `Runnable` code directly.
-- Worker executors run expired user tasks, so slow or blocking task logic does
-  not block bucket expiration, wheel advancement, or cascade processing.
-- Applications may use the built-in executors or provide caller-owned boss and
-  worker `ExecutorService` instances.
+- The boss loop submits due entries to the worker executor.
+- Worker executors run expired scheduled tasks. Blocking task logic is isolated
+  from bucket expiration, wheel advancement, and cascade processing.
+- Applications choose built-in executors or externally managed boss and worker
+  `ExecutorService` instances.
 
-Read the full developer guide here:
+Architecture guide:
 
 - [Architecture and sequence diagrams](docs/architecture.md)
 
@@ -203,11 +198,11 @@ make verify
 ```
 
 `make verify` runs the full JUnit 5 suite and enforces the JaCoCo coverage gate.
-Current thresholds are 85% line coverage and 85% branch coverage at bundle
+Coverage thresholds are 85% line coverage and 85% branch coverage at bundle
 level.
 
 The core module targets Java 11. The Boot 3 starter targets Java 17. Local builds
-do not require a Maven toolchain file by default:
+run without a Maven toolchain file by default:
 
 ```bash
 make verify
@@ -226,7 +221,7 @@ GitNexus helper targets. The Makefile uses `mvn` by default; override it with
 ## Spring Boot
 
 The Spring modules auto-configure a singleton `Timer` bean when the starter is
-on the classpath and no user-defined `Timer` bean exists.
+on the classpath and an application `Timer` bean is absent.
 
 ```yaml
 timewheel4j:
@@ -270,36 +265,35 @@ By default, Spring auto-creates two managed executor beans:
 - `timewheel4jWorkerExecutor`
 
 The timer uses those beans, and Spring owns their lifecycle. If
-`executor.bean-name` is configured, auto-creation backs off and the timer looks
-up that caller-owned `ExecutorService` bean by name. If `executor.auto-create`
-is set to `false` and no bean name is configured, the timer falls back to the
-core library defaults and owns its internal executor.
+`executor.bean-name` is configured, the timer resolves that externally managed
+`ExecutorService` bean by name. With `executor.auto-create=false` and an empty
+bean name, the core library creates and owns its internal executor.
 
 The compatibility aliases `timewheel4j.boss.executor-bean-name` and
 `timewheel4j.worker.executor-bean-name` remain supported.
 
 ## Benchmark
 
-JMH benchmarks are isolated behind the `benchmark` profile so normal CI stays
-fast:
+The `benchmark` profile isolates JMH benchmark packaging from the default CI
+verification path:
 
 ```bash
 make benchmark-package
 make benchmark
 ```
 
-For a quick smoke run:
+Minimal benchmark target:
 
 ```bash
 make benchmark-smoke
 ```
 
-Current benchmark baselines compare:
+Benchmark baselines compare:
 
 - `SystemTimer`, the hierarchical timing wheel
 - JDK `ScheduledExecutorService`
 - Netty `HashedWheelTimer`
-- a simple one-entry-per-task `DelayQueue`
+- a per-task `DelayQueue` baseline
 
 Parameters cover task count, delay range, cancellation ratio, and JMH worker
 threads. Use `-t N` to model multiple producer threads scheduling concurrently:
@@ -312,14 +306,14 @@ java -jar timewheel4j-core/target/timewheel4j-core-benchmarks.jar '.*TimerBenchm
   -t 4
 ```
 
-Stress-oriented suites are in `TimerStressBenchmark`. They default to
-million-task matrices and are intentionally kept out of default CI:
+Stress-oriented suites are in `TimerStressBenchmark`. They use explicit
+benchmark commands for million-task matrices:
 
 ```bash
 make benchmark-stress
 ```
 
-For a tiny stress smoke:
+Minimal stress command:
 
 ```bash
 java -jar timewheel4j-core/target/timewheel4j-core-benchmarks.jar '.*TimerStressBenchmark.*' \
@@ -348,7 +342,7 @@ long maxBucketDelayMs = metrics.maxBucketDelayMs();
 ```
 
 The metrics are designed for local observability and benchmark diagnostics.
-They do not add a metrics backend dependency.
+Metrics backend adapters remain outside the core dependency set.
 
 ## Release
 
@@ -403,9 +397,9 @@ The core project targets Java 11 and uses the Maven compiler `release` option to
 produce Java 11 bytecode. The Boot 3 starter targets Java 17 because Spring Boot
 3.x and Spring Framework 6 require it.
 
-## Future Work
+## Extension Areas
 
-- benchmark result publishing and historical comparison reports
-- optional adapters for Micrometer or other metrics backends
-- contention tuning for hot buckets and high cancellation rates
-- richer delay distribution generators for benchmark workloads
+- Benchmark result publishing and historical comparison reports.
+- Optional adapters for Micrometer or other metrics backends.
+- Contention tuning for hot buckets and high cancellation rates.
+- Richer delay distribution generators for benchmark workloads.
